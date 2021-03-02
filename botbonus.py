@@ -7,6 +7,10 @@ from flask import Flask, request, Response
 # Handles events from Slack
 from slackeventsapi import SlackEventAdapter
 
+import requests
+
+import json
+
 
 message_counts = {}
 # Load the Token from .env file
@@ -38,15 +42,24 @@ def message(payload):
     channel_id = event.get('channel')
     user_id = event.get('user')
     text2 = event.get('text')
+
+    if (text2 == 'toronto'):
+        response = requests.get(
+            'http://api.openweathermap.org/data/2.5/weather?q=toronto&appid=104fed0344bb1161f3581a56f08e5075')
+
+        print(response.json())
+        client.chat_postMessage(
+            channel=channel_id, text=json.dumps(response.json()))
+
     if BOT_ID != user_id:
-        #client.chat_postMessage(channel=channel_id, text=text2)
+        # client.chat_postMessage(channel=channel_id, text=text2)
         if user_id in message_counts:
             message_counts[user_id] += 1
         else:
             message_counts[user_id] = 1
 
 
-@app.route('/message-count', methods=['GET', 'POST'])
+@ app.route('/message-count', methods=['GET', 'POST'])
 def message_count():
     data = request.form
     user_id = data.get('user_id')
@@ -58,6 +71,7 @@ def message_count():
             channel=channel_id, text=f'Message:{message_count}')
 
     return Response(), 200
+
 
 # handling Message Events
 
